@@ -1,0 +1,2 @@
+Ini berkas contoh untuk uji enkripsi file ElGamal.
+Baris kedua: Kriptografi 2026.

@@ -6,7 +6,7 @@ operasi (eksponensiasi modular, Euclid, invers modular, Miller-Rabin, akar
 primitif, pemecahan blok pesan) ditulis sendiri. Satu-satunya modul standar
 untuk logika inti adalah `random.SystemRandom` (sumber bilangan acak).
 
-Anggota:
+## Anggota:
 
 | Nama                   | NRP        |
 |------------------------|------------|

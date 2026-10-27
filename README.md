@@ -36,9 +36,7 @@ kelompok11_dh_elgamal/
 ├── tests/
 │   └── test_all.py          # 16 unit test (unittest bawaan Python)
 ├── contoh/                  # contoh kunci, pesan, dan hasil enkripsi
-└── docs/
-    ├── Laporan_Kelompok11.pdf
-    └── sampul_asli.pdf
+└── Laporan_Kelompok11.pdf
 ```
 
 ## Cara menjalankan

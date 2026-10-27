@@ -47,10 +47,18 @@ Kebutuhan: **Python 3.8+** saja (tanpa `pip install`).
 
 ```bash
 python main.py                              # menu interaktif
+python3 ui.py                               # antarmuka web lokal
 python demo/demo_slide.py                   # contoh perhitungan dari materi
 python demo/demo_lengkap.py                 # demo otomatis parameter 256 bit
 python -m unittest discover -s tests -v     # jalankan semua unit test
 ```
+
+Antarmuka web dapat dibuka di `http://127.0.0.1:8000` setelah menjalankan
+`python3 ui.py`. Hentikan server dengan `Ctrl+C`. Kunci dan cipherteks UI hanya
+disimpan di memori proses selama server berjalan; UI ini ditujukan untuk demo
+pembelajaran, bukan untuk melindungi data sungguhan. UI mendukung enkripsi teks
+maupun upload file dan dekripsi file `.enc`; ukuran file dibatasi 32 KB agar
+demo tetap responsif.
 
 ## Tahapan algoritma dan lokasinya di kode
 

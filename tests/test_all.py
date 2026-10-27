@@ -15,6 +15,7 @@ from crypto.math_utils import (discrete_log_bruteforce, extended_gcd, gcd,  # no
                                is_probable_prime, mod_exp, mod_inverse,
                                prime_factors)
 from crypto.session import xor_cipher  # noqa: E402
+from ui import parse_file_ciphertext, serialize_file_ciphertext  # noqa: E402
 
 
 class TestMath(unittest.TestCase):
@@ -121,6 +122,23 @@ class TestEncodingAndStorage(unittest.TestCase):
             ct2 = storage.load_ciphertext(f"{d}/ct")
             self.assertEqual(eg.decrypt_bytes(ct2, storage.load_private_key(f"{d}/priv")),
                              b"uji simpan")
+
+    def test_file_ciphertext_roundtrip(self):
+        pub, priv = eg.generate_keypair(bits=64)
+        original = b"\x00binary file\xff"
+        encrypted = eg.encrypt_bytes(original, pub)
+        serialized = serialize_file_ciphertext(encrypted, "sample.bin")
+        restored, filename = parse_file_ciphertext(serialized, priv)
+        self.assertEqual(filename, "sample.bin")
+        self.assertEqual(eg.decrypt_bytes(restored, priv), original)
+
+    def test_invalid_file_ciphertext_metadata(self):
+        pub, priv = eg.generate_keypair(bits=64)
+        encrypted = eg.encrypt_bytes(b"file", pub)
+        serialized = serialize_file_ciphertext(encrypted, "sample.bin")
+        corrupted = serialized.replace(b"length=4", b"length=999")
+        with self.assertRaises(ValueError):
+            parse_file_ciphertext(corrupted, priv)
 
 
 class TestSession(unittest.TestCase):

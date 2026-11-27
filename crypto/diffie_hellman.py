@@ -6,6 +6,16 @@ Tahapan (sesuai materi Pertemuan 9):
   3. Bob memilih y acak (rahasia), mengirim Y = g^y mod n kepada Alice.
   4. Alice menghitung K  = Y^x mod n.
   5. Bob   menghitung K' = X^y mod n.   Hasilnya K = K' = g^(xy) mod n.
+
+Kenapa K = K'?
+  K  = Y^x = (g^y)^x = g^(xy) mod n
+  K' = X^y = (g^x)^y = g^(xy) mod n
+Penyadap hanya melihat n, g, X, Y. Untuk menghitung K ia butuh x atau y,
+yaitu harus memecahkan logaritma diskrit dari X atau Y (sulit untuk n besar).
+
+Contoh materi: n = 251, g = 6, x = 124, y = 158
+  X = 6^124 mod 251 = 209,  Y = 6^158 mod 251 = 197
+  K = 197^124 mod 251 = 79 = 209^158 mod 251 = K'
 """
 from .math_utils import (generate_safe_prime, find_primitive_root,
                          is_probable_prime, is_primitive_root, mod_exp,
@@ -16,6 +26,8 @@ from .trace import SILENT, fmt
 def generate_parameters(bits=256, tr=SILENT):
     """Tahap 1: membangkitkan parameter publik (n, g)."""
     tr.title("TAHAP 1 - Parameter publik Diffie-Hellman")
+    # Prima aman n = 2q+1 -> faktor prima n-1 pasti {2, q}, sehingga akar
+    # primitif bisa diuji cepat (lihat math_utils.is_primitive_root).
     n, q = generate_safe_prime(bits)
     tr.step(f"Bangkitkan prima aman n = 2q+1 ({bits} bit): n = {fmt(n)}")
     g = find_primitive_root(n, factors=[2, q])
@@ -33,16 +45,22 @@ def validate_parameters(n, g):
 
 def generate_private_key(n):
     """Tahap 2/3a: bilangan rahasia acak 1 < x < n-1."""
+    # Rahasia ini TIDAK pernah dikirim; hanya g^x mod n yang dikirim.
     return random_between(2, n - 2)
 
 
 def compute_public_value(g, private, n):
     """Tahap 2/3b: nilai publik = g^private mod n."""
+    # Aman dikirim lewat jalur terbuka: dari nilai ini, `private` tidak bisa
+    # dihitung balik tanpa memecahkan logaritma diskrit.
     return mod_exp(g, private, n)
 
 
 def compute_shared_secret(other_public, own_private, n):
     """Tahap 4/5: kunci sesi = other_public^own_private mod n."""
+    # Tolak nilai publik "jebakan": 0, 1, n-1, atau di luar rentang. Jika
+    # lawan (atau penyerang di tengah) mengirim 1 atau n-1, kunci sesi pasti
+    # 1 atau n-1 -> mudah ditebak siapa pun.
     if not (1 < other_public < n - 1):
         raise ValueError("nilai publik pihak lain tidak valid")
     return mod_exp(other_public, own_private, n)
@@ -60,20 +78,23 @@ def run_exchange(n, g, x=None, y=None, tr=SILENT, validate=True):
     tr.title("DIFFIE-HELLMAN KEY EXCHANGE")
     tr.step(f"Parameter publik: n = {fmt(n)}, g = {g}")
 
+    # --- Sisi Alice: rahasia x, kirim X ---
     x = x if x is not None else generate_private_key(n)
     X = compute_public_value(g, x, n)
     tr.step(f"Alice memilih x = {fmt(x)} (rahasia)")
     tr.line(f"X = g^x mod n = {g}^{fmt(x)} mod {fmt(n)} = {fmt(X)}   --> dikirim ke Bob")
 
+    # --- Sisi Bob: rahasia y, kirim Y ---
     y = y if y is not None else generate_private_key(n)
     Y = compute_public_value(g, y, n)
     tr.step(f"Bob memilih y = {fmt(y)} (rahasia)")
     tr.line(f"Y = g^y mod n = {g}^{fmt(y)} mod {fmt(n)} = {fmt(Y)}   --> dikirim ke Alice")
 
-    K = compute_shared_secret(Y, x, n)
+    # --- Masing-masing menghitung kunci sesi dari nilai publik lawan ---
+    K = compute_shared_secret(Y, x, n)        # Alice: Y^x
     tr.step("Alice menghitung kunci sesi")
     tr.line(f"K  = Y^x mod n = {fmt(Y)}^{fmt(x)} mod {fmt(n)} = {fmt(K)}")
-    K2 = compute_shared_secret(X, y, n)
+    K2 = compute_shared_secret(X, y, n)       # Bob  : X^y
     tr.step("Bob menghitung kunci sesi")
     tr.line(f"K' = X^y mod n = {fmt(X)}^{fmt(y)} mod {fmt(n)} = {fmt(K2)}")
 

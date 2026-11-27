@@ -2,6 +2,18 @@
 
 Format kunci   : baris "nama=nilai" (bilangan desimal).
 Format cipher  : header "ELGAMAL-v1", metadata, lalu satu baris "a:b" per blok.
+
+Contoh public.key           Contoh berkas cipherteks
+  ELGAMAL-PUBLIC-KEY          ELGAMAL-v1
+  p=2273                      mode=slide
+  g=3                         block_size=4
+  y=461                       length=8
+                              ---
+                              1439:74
+                              1220:1682
+
+PENTING: berkas private.key berisi x dalam bentuk teks biasa (tidak
+dienkripsi), jadi jangan dibagikan; yang dibagikan hanya public.key.
 """
 from .elgamal import Ciphertext, PrivateKey, PublicKey
 
@@ -55,11 +67,13 @@ def load_ciphertext(path):
         lines = [ln.strip() for ln in f if ln.strip()]
     if not lines or lines[0] != "ELGAMAL-v1":
         raise ValueError(f"{path}: bukan berkas cipherteks ElGamal")
+    # Baca metadata "kunci=nilai" sampai garis pemisah "---" ...
     meta, i = {}, 1
     while lines[i] != "---":
         k, v = lines[i].split("=", 1)
         meta[k] = v
         i += 1
+    # ... lalu setiap baris setelahnya adalah satu blok cipherteks "a:b".
     blocks = []
     for ln in lines[i + 1:]:
         a, b = ln.split(":")
